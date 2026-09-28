@@ -380,6 +380,7 @@ def load_accepted_parquet(
     input_summary: Mapping[str, Any],
     *,
     batch_size: int = DEFAULT_BATCH_SIZE,
+    require_full_staging_count: bool = True,
 ) -> dict[str, int]:
     if not 1 <= batch_size <= 10_000:
         raise ValueError("batch_size must be between 1 and 10,000.")
@@ -436,7 +437,7 @@ def load_accepted_parquet(
     if processed != inserted + skipped_existing:
         raise AssertionError("Processed rows do not reconcile to inserted plus skipped.")
     staging_count = int(cursor.execute("SELECT COUNT_BIG(*) FROM stg.transactions").fetchone()[0])
-    if staging_count != EXPECTED_ACCEPTED_ROWS:
+    if require_full_staging_count and staging_count != EXPECTED_ACCEPTED_ROWS:
         raise AssertionError(
             f"stg.transactions has {staging_count} rows; expected "
             f"{EXPECTED_ACCEPTED_ROWS}. Run the SQL validation script before proceeding."
